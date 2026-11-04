@@ -8,7 +8,7 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 import webbrowser
 
 DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.db')
-PORT = 8080
+PORT = int(os.environ.get('PORT', 8080))
 DEFAULT_FEE = 300000  # Standart 300 ming so'm
 
 # Administrator hisob ma'lumotlari
