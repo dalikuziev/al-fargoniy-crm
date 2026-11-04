@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diyorbek Alikuziev CRM - O'quvchilar To'lov Tizimi</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- SheetJS (Excel Eksport) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <!-- Maxsus korporativ stillar (Oq, Ko'k, Qora) -->
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-900 antialiased flex flex-col selection:bg-blue-600 selection:text-white">
+
+  <!-- ========================================================== -->
+  <!-- 1. HEADER (BOSHQARUV PANELI) -->
+  <!-- ========================================================== -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3.5">
+        
+        <!-- Chap taraf: PYTHON LOGO & Sarlavha -->
+        <div class="flex items-center gap-3">
+          <!-- Python Rasmiy Vektor Logotipi -->
+          <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center p-1.5 shadow-sm border border-slate-800 shrink-0">
+            <svg class="w-7 h-7" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M63.7 3.5C48.2 3.5 34.5 4.8 34.5 17.2V27.3H64.1V31.6H20.6C7.2 31.6 0 39.9 0 54.3C0 69.1 8.4 77.1 22.6 77.1H30.3V64.6C30.3 55.4 38.3 47.9 47.8 47.9H77C84.8 47.9 91.2 41.4 91.2 33.5V17.2C91.2 4.8 79.2 3.5 63.7 3.5ZM48.9 12.3C51.8 12.3 54.1 14.6 54.1 17.5C54.1 20.4 51.8 22.7 48.9 22.7C46 22.7 43.7 20.4 43.7 17.5C43.7 14.6 46 12.3 48.9 12.3Z" fill="#387EB8"/>
+              <path d="M64.3 124.5C79.8 124.5 93.5 123.2 93.5 110.8V100.7H63.9V96.4H107.4C120.8 96.4 128 88.1 128 73.7C128 58.9 119.6 50.9 105.4 50.9H97.7V63.4C97.7 72.6 89.7 80.1 80.2 80.1H51C43.2 80.1 36.8 86.6 36.8 94.5V110.8C36.8 123.2 48.8 124.5 64.3 124.5ZM79.1 115.7C76.2 115.7 73.9 113.4 73.9 110.5C73.9 107.6 76.2 105.3 79.1 105.3C82 105.3 84.3 107.6 84.3 110.5C84.3 113.4 82 115.7 79.1 115.7Z" fill="#FFE052"/>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-black uppercase tracking-wider text-slate-500">O'quv Markaz CRM</span>
+              <span id="roleBadge" class="px-2 py-0.2 rounded-md text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                Mehmon (Ko'rish)
+              </span>
+            </div>
+            <p id="currentMonthBadge" class="text-xs text-blue-700 font-bold mt-0.5">
+              Yuklanmoqda...
+            </p>
+          </div>
+        </div>
+
+        <!-- O'rta & O'ng taraf: Oy selektori, Amallar va YUQORI O'NG BURCHAKDA "Diyorbek Alikuziev" -->
+        <div class="flex flex-wrap items-center justify-between md:justify-end gap-2.5">
+          
+          <!-- Oy tanlash selektori -->
+          <div class="relative">
+            <select id="monthSelector" class="appearance-none bg-slate-100 hover:bg-slate-200 text-slate-900 text-xs font-bold py-2.5 pl-3 pr-7 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer transition">
+              <!-- JS to'ldiradi -->
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
+
+          <!-- FAQAT ADMIN KO'RADIGAN TUGMALAR -->
+          <div id="adminActionButtons" class="flex items-center gap-2 hidden">
+            <!-- YANGI OY BOSHLASH -->
+            <button onclick="openNewMonthModal()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 transition active:scale-95">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              <span>Yangi oy</span>
+            </button>
+
+            <!-- YANGI O'QUVCHI QO'SHISH -->
+            <button onclick="openAddStudentModal()" class="px-3 py-2 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 transition active:scale-95">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+              <span>Qo'shish</span>
+            </button>
+          </div>
+
+          <!-- Excel va Chop etish (Hamma uchun ochiq) -->
+          <button onclick="exportToExcel()" title="Excel (XLSX) formatida yuklab olish" class="p-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          </button>
+
+          <!-- ======================================================== -->
+          <!-- YUQORI O'NG BURCHAK: DIYORBEK ALIKUZIEV & LOGIN / LOGOUT -->
+          <!-- ======================================================== -->
+          <div id="userProfileSection" class="flex items-center pl-2 border-l border-slate-200">
+            <!-- JS to'ldiradi (Diyorbek Alikuziev, Login yoki Logout) -->
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MEHMONLAR UCHUN OGOHLANTIRUVCHI BANNER -->
+  <div id="guestWarningBanner" class="bg-blue-50 border-b border-blue-200 px-4 py-2 text-center text-xs text-blue-900 font-medium flex items-center justify-center gap-2 no-print">
+    <span>👀 <strong>Ko'rish rejimi:</strong> Siz barcha ma'lumotlarni ko'rishingiz mumkin. O'zgartirishlar faqat <strong>Diyorbek Alikuziev</strong> uchun ruxsat etilgan.</span>
+    <button onclick="openLoginModal()" class="ml-2 underline font-bold text-blue-700 hover:text-blue-900">Tizimga kirish 🔑</button>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- 2. ASOSIY KONTENT -->
+  <!-- ========================================================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1 w-full space-y-5">
+
+    <!-- A) ALOHIDA 2 TA BO'LIM TABLARI (FILIALLAR) -->
+    <section class="space-y-2 no-print">
+      <div id="branchTabsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- JS to'ldiradi (Yangiqo'rg'on & Uchko'prik) -->
+      </div>
+    </section>
+
+    <!-- B) STATISTIKA KARTALARI -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
+      
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">O'quvchilar Soni</p>
+          <h3 id="statTotalStudents" class="text-2xl font-black text-slate-900 mt-1">0 ta</h3>
+          <p class="text-[11px] text-slate-400 font-medium mt-0.5">Shu bo'lim bo'yicha</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center font-bold">
+          👥
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
+            <span>To'laganlar</span>
+            <span id="statPaidPercent" class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded-full font-bold">0%</span>
+          </p>
+          <h3 id="statPaidCount" class="text-2xl font-black text-blue-700 mt-1">0 ta</h3>
+          <p id="statTotalPaid" class="text-[11px] font-bold text-blue-600 mt-0.5">0 so'm</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+          ✅
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider">To'lamaganlar</p>
+          <h3 id="statUnpaidCount" class="text-2xl font-black text-red-600 mt-1">0 ta</h3>
+          <p id="statRemainingAmount" class="text-[11px] font-bold text-red-600 mt-0.5">0 so'm</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-bold">
+          ⏳
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kutilayotgan Summa</p>
+          <h3 id="statExpectedTotal" class="text-lg sm:text-xl font-black text-slate-900 mt-1">0 so'm</h3>
+          <div class="w-28 bg-slate-100 rounded-full h-2 mt-2 overflow-hidden">
+            <div id="statProgressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold">
+          💰
+        </div>
+      </div>
+
+    </section>
+
+    <!-- C) FILTRLAR VA QIDIRUV -->
+    <section class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3.5 no-print">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        
+        <div class="relative flex-1 max-w-md">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+          <input type="text" id="studentSearchInput" placeholder="Ism, familiya yoki telefon bo'yicha qidirish..."
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 bg-slate-50 focus:bg-white transition">
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          
+          <div class="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200">
+            <button id="filterStatusAll" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-xs transition">
+              Barchasi
+            </button>
+            <button id="filterStatusPaid" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-200 transition">
+              To'laganlar ✅
+            </button>
+            <button id="filterStatusUnpaid" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-200 transition">
+              To'lamaganlar ❌
+            </button>
+          </div>
+
+          <select id="sortSelector" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold py-2.5 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer">
+            <option value="num_asc">Tartib: Boshlang'ich</option>
+            <option value="name_asc">Tartib: Ism (A-Z)</option>
+            <option value="status_unpaid_first">Tartib: Qarzdorlar avval</option>
+            <option value="status_paid_first">Tartib: To'laganlar avval</option>
+          </select>
+
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 overflow-x-auto pb-1" id="groupFilterContainer">
+        <!-- JS to'ldiradi -->
+      </div>
+    </section>
+
+    <!-- OMMAVIY O'CHIRISH PANELI (FAQAT ADMIN UCHUN) -->
+    <div id="bulkActionsBar" class="hidden bg-slate-900 text-white p-3.5 rounded-2xl shadow-xl flex items-center justify-between gap-4 fade-in no-print">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></span>
+        <span id="selectedCountText" class="text-xs font-bold">0 ta o'quvchi tanlandi</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="deleteSelectedStudents()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition active:scale-95 shadow-md shadow-red-900/50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          Tanlanganlarni o'chirish 🗑️
+        </button>
+        <button onclick="toggleSelectAll(false)" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition">
+          Bekor qilish
+        </button>
+      </div>
+    </div>
+
+    <!-- D) O'QUVCHILAR JADVALI -->
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+      
+      <div class="px-5 py-3.5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <h2 id="currentBranchTableTitle" class="font-extrabold text-slate-900 text-sm">
+            O'quvchilar Ro'yxati
+          </h2>
+          <span id="filteredCountBadge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-50 text-blue-700 border border-blue-200">
+            0 ta
+          </span>
+        </div>
+        <p id="tableHelpText" class="text-xs text-slate-400 no-print">
+          To'lov holati monitoringi
+        </p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-100/70 border-b border-slate-200 text-[11px] uppercase tracking-wider font-extrabold text-slate-600">
+              <th id="thCheckbox" class="py-3 px-3 text-center w-8 no-print hidden">
+                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)" title="Barchasini tanlash"
+                  class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+              </th>
+              <th class="py-3 px-3 text-center w-10">№</th>
+              <th class="py-3 px-4">Ism va Familiya</th>
+              <th class="py-3 px-4 hidden sm:table-cell">Guruh</th>
+              <th class="py-3 px-4 hidden md:table-cell">Telefon Raqam</th>
+              <th class="py-3 px-4">To'lov Holati</th>
+              <th class="py-3 px-4 hidden lg:table-cell">Izoh</th>
+              <th id="thActions" class="py-3 px-4 text-right no-print">Amallar</th>
+            </tr>
+          </thead>
+          <tbody id="studentTableBody" class="divide-y divide-slate-100 text-sm font-medium">
+            <!-- JS to'ldiradi -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 no-print">
+        <div class="flex items-center gap-2">
+          <span>💡 <strong>Eslatma:</strong> Barcha ma'lumotlar server bazasida xavfsiz saqlanadi. Standart to'lov: <strong>300 000 so'm</strong>.</span>
+        </div>
+        <div class="text-[11px] font-bold text-slate-400">
+          Diyorbek Alikuziev CRM
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================== -->
+  <!-- 3. FOOTER -->
+  <!-- ========================================================== -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-auto no-print">
+    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 font-medium flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>
+        Muallif: <strong class="text-slate-900 font-bold">Diyorbek Alikuziev</strong> &bull; O'quvchilar Boshqaruv Tizimi
+      </div>
+      <div>
+        Python Backend + SQLite &bull; Yangiqo'rg'on va Uchko'prik bo'limlari
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Konteyner -->
+  <div id="modalContainer"></div>
+
+  <!-- Toast Konteyner -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Skriptlar -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
